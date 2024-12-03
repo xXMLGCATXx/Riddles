@@ -9,20 +9,11 @@
 #define CASOUT 4
 #define ALICEIN 18
 
-#define LED1 17
-#define LED2 27
-#define LED3 22
-#define LED4 10
-#define LED5 9
-#define LED6 11
-#define LED7 5
-#define LED8 6
-#define LED9 13
-#define LED10 26
-
 int ledPins[10] = {17, 27, 22, 10, 9, 11, 5, 13, 6, 19};
+int switchPins[10] = {23, 24, 25, 8, 7, 12, 16, 20, 21, 26}
 
-void convertToBinary(int val, int array[])
+void
+convertToBinary(int val, int array[])
 {
     for (int i = 0; i < SIZE; i++)
     {
@@ -60,22 +51,27 @@ int main(void)
     int BestScore = 0;
     int BestAlice[SIZE];
     int BestBob[SIZE];
+    int WorstCasino[SIZE];
     int mostCommonScore = 0;
+    int bestBobScore = 0;
+    int WorstCasinoScore = 10;
+    int bobAnswer[SIZE];
+    int bobAnswerB[SIZE];
     while (TRUE)
     {
         if (!digitalRead(SWITCH))
         {
             int scoreBuckets[11] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-            for (Bcount = 0; Bcount < 1024; Bcount++)
+            for (Ccount = 0; Ccount < 1024; Ccount++)
             {
-                convertToBinary(Bcount, BBcount);
+                convertToBinary(Ccount, BCcount);
                 for (int j = 0; j < 10; j++)
                 {
-                    digitalWrite(ledPins[j], BBcount[j]);
+                    digitalWrite(ledPins[j], BCcount[j]);
                 }
-                for (Ccount = 0; Ccount < 1024; Ccount++)
+                for (Bcount = 0; Bcount < 1024; Bcount++)
                 {
-                    convertToBinary(Ccount, BCcount);
+                    convertToBinary(Bcount, BBcount);
                     for (int i = 0; i < 10; i++)
                     {
                         Alice[i] = digitalRead(22);
@@ -97,17 +93,26 @@ int main(void)
                             scoreBuckets[j]++;
                         }
                     }
-                    if (score > BestScore)
+                    if (score > bestBobScore)
                     {
                         for (int i = 0; i < 10; i++)
                         {
                             BestAlice[i] = Alice[i];
                             BestBob[i] = BBcount[i];
                         }
-                        BestScore = score;
+                        bestBobScore = score;
                     }
                     printf("%d\n", Bcount * 1024 + Ccount);
                 }
+                if (bestBobScore < WorstCasino)
+                {
+                    for (int i = 0; i < 10; i++)
+                    {
+                        WorstCasino[i] = BestBob[i];
+                    }
+                    WorstCasinoScore = bestBobScore;
+                }
+                bestBobScore = 0;
             }
 
             for (int j; j < 11; j++)
@@ -137,21 +142,64 @@ int main(void)
             {
                 digitalWrite(ledPins[i], LOW);
             }
-            for (int j = 0; j < mostCommonScore; j++)
+            fflush(stdout);
+            delay(5000);
+            for (int i = 0; i < 10; i++)
             {
-                digitalWrite(ledPins[j], HIGH);
+                printf("%d", WorstCasino[i]);
+            }
+            printf("\nBest Bob in the worst casino:\n");
+            for (int i = 0; i < 10; i++)
+            {
+                printf("%d", WorstCasino[i]);
+                digitalWrite(ledPins[i], WorstCasino[i]);
+            }
+            fflush(stdout);
+            delay(5000);
+            while (!digitalRead(SWITCH))
+            {
+                for (i = 0; i < 10; i++)
+                {
+                    digitalWrite(ledPins[i], digitalRead(switchPins[i]));
+                    bobAnswer[i] = digitalRead(switchPins[i]);
+                }
+            }
+            convertToBinary(bobAnswer, bobAnswerB);
+            for (int i = 0; i < 10; i++)
+            {
+                Alice[i] = digitalRead(22);
+                digitalWrite(17, bobAnswerB[i]);
+                digitalWrite(27, WorstCasino[i]);
+            }
+            score = 0;
+            for (int i = 0; i < 10; i++)
+            {
+                if (Alice[i] == BBcount[i] && BBcount[i] == BCcount[i])
+                {
+                    score++;
+                }
+            }
+            for (int i = 0; i < 10; i++)
+            {
+                digitalWrite(ledPins[i], LOW);
+            }
+            for (int j = 0; j < 10; j++)
+            {
+                digitalWrite(ledPins[j], Alice[i]);
+                fflush(stdout);
+                delay(1000);
             }
             fflush(stdout);
             delay(5000);
             for (int i = 0; i < 10; i++)
             {
-                printf("%d", BestAlice[i]);
+                digitalWrite(ledPins[i], LOW);
             }
-            printf("\nBest Bob:\n");
-            for (int i = 0; i < 10; i++)
+            for (int j = 0; j < score; j++)
             {
-                printf("%d", BestBob[i]);
-                digitalWrite(ledPins[i], BestBob[i]);
+                digitalWrite(ledPins[j], HIGH);
+                fflush(stdout);
+                delay(1000);
             }
             fflush(stdout);
             delay(5000);
